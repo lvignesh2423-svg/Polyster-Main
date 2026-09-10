@@ -3,6 +3,33 @@ import { chatCompletion } from "@/lib/ai";
 import { buildChatSystemPrompt } from "@/lib/prompts";
 import type { GitHubProfile, EnrichedRepo, ChatMessage } from "@/lib/types";
 
+function stripReasoning(text: string): string {
+  let cleaned = text;
+
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, "");
+  cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, "");
+
+  const lines = cleaned.split("\n");
+  const result: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (
+      trimmed.startsWith("Here's a thinking process") ||
+      trimmed.startsWith("Here's my thinking") ||
+      trimmed.startsWith("Let me think") ||
+      trimmed.startsWith("**Step") ||
+      trimmed.match(/^\d+\.\s+\*\*Analyze/) ||
+      trimmed.match(/^\d+\.\s+\*\*Identify/) ||
+      trimmed.match(/^\d+\.\s+\*\*Determine/) ||
+      trimmed.match(/^\d+\.\s+\*\*Draft/)
+    ) {
+      continue;
+    }
+    result.push(line);
+  }
+  return result.join("\n").trim();
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const { profile, repos, messages, mode } = body as {
@@ -30,19 +57,20 @@ export async function POST(request: NextRequest) {
       apiMessages.splice(1, 0, {
         role: "system" as const,
         content:
-          "This is a practice session. The user will answer your questions. Grade their answers, give feedback, and move to the next topic. Be encouraging but honest about weaknesses.",
+          "This is a practice session. The user will answer your questions. Grade their answers, give feedback, and move to the next topic. Be encouraging but honest about weaknesses. Do not show your thinking process — just give the final answer.",
       });
     } else if (mode === "mock") {
       apiMessages.splice(1, 0, {
         role: "system" as const,
         content:
-          "This is a timed mock interview. Ask one question at a time. Be professional and structured like a real FAANG interview. After each answer, give brief feedback and move to the next question. After 10 questions, provide a final score.",
+          "This is a timed mock interview. Ask one question at a time. Be professional and structured like a real FAANG interview. After each answer, give brief feedback and move to the next question. After 10 questions, provide a final score. Do not show your thinking process — just give the final answer.",
       });
     }
 
-    const response = await chatCompletion(apiMessages, 2048, 0.7);
+    const raw = await chatCompletion(apiMessages, 4096, 0.7);
+    const response = stripReasoning(raw);
 
-    return Response.json({ response });
+    return Response.json({ response: response || "I apologize, please try again." });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to generate response";

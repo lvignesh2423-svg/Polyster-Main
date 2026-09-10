@@ -21,6 +21,63 @@ function getClient(): OpenAI {
   return client;
 }
 
+export function extractJSON(raw: string): string {
+  let cleaned = raw
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+
+  try {
+    JSON.parse(cleaned);
+    return cleaned;
+  } catch {}
+
+  const arrayStart = cleaned.indexOf("[");
+  const objectStart = cleaned.indexOf("{");
+
+  if (arrayStart !== -1 && (objectStart === -1 || arrayStart < objectStart)) {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = arrayStart; i < cleaned.length; i++) {
+      const ch = cleaned[i];
+      if (escape) { escape = false; continue; }
+      if (ch === "\\") { escape = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === "[") depth++;
+      if (ch === "]") depth--;
+      if (depth === 0) {
+        const candidate = cleaned.slice(arrayStart, i + 1);
+        try { JSON.parse(candidate); return candidate; } catch {}
+        break;
+      }
+    }
+  }
+
+  if (objectStart !== -1) {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = objectStart; i < cleaned.length; i++) {
+      const ch = cleaned[i];
+      if (escape) { escape = false; continue; }
+      if (ch === "\\") { escape = true; continue; }
+      if (ch === '"') { inString = !inString; continue; }
+      if (inString) continue;
+      if (ch === "{") depth++;
+      if (ch === "}") depth--;
+      if (depth === 0) {
+        const candidate = cleaned.slice(objectStart, i + 1);
+        try { JSON.parse(candidate); return candidate; } catch {}
+        break;
+      }
+    }
+  }
+
+  return cleaned;
+}
+
 export async function generateCompletion(
   systemPrompt: string,
   userPrompt: string,
@@ -50,7 +107,7 @@ export async function generateCompletionStream(
   const response = await openai.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: "system", content: systemPrompt },
+      { role: "system", content: userPrompt },
       { role: "user", content: userPrompt },
     ],
     max_tokens: maxTokens,
