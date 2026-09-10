@@ -78,15 +78,14 @@ Key files: ${r.files
 ${reposSummary}
 
 ## Task
-Generate exactly 20 interview questions across these categories:
-A. Project Deep-Dive (3 questions) — architecture walkthroughs
-B. Technical Decisions (3 questions) — technology choice rationale
-C. Code-Specific (3 questions) — reference actual files and functions
-D. Problem-Solving (2 questions) — scaling and design challenges
-E. Debugging Scenarios (2 questions) — production failure handling
-F. Behavioral tied to repos (3 questions) — teamwork, bugs fixed, lessons learned
-G. Gaps & Red Flags (2 questions) — missing tests, poor docs, outdated patterns
-H. Trending/Modern (2 questions) — modern alternatives to patterns found in code
+Generate exactly 10 interview questions:
+A. Project Deep-Dive (2) — architecture walkthroughs
+B. Technical Decisions (2) — technology choice rationale
+C. Code-Specific (2) — reference actual files
+D. Problem-Solving (1) — scaling challenges
+E. Behavioral (1) — teamwork, lessons learned
+F. Gaps & Red Flags (1) — missing tests, poor docs
+G. Trending (1) — modern alternatives
 
 Return a JSON array. Each element:
 {
@@ -146,27 +145,16 @@ ${r.full_name}: langs=[${Object.keys(r.languages).join(",")}] stars=${r.stargaze
     )
     .join("\n");
 
-  return `Analyze this developer's GitHub profile and identify weaknesses and strengths.
+  return `Analyze this developer's GitHub and identify weaknesses and strengths.
 
-## Profile
-${profile.login} - ${profile.bio || "N/A"} - ${profile.public_repos} repos
+Profile: ${profile.login} - ${profile.bio || "N/A"} - ${profile.public_repos} repos
 
-## Repos
+Repos:
 ${reposSummary}
 
-Return JSON with:
-{
-  "weaknesses": [
-    { "repo": "repo_name", "issues": [{ "severity": "high|medium|low", "message": "description" }], "score": 0-100 }
-  ],
-  "strengths": [
-    { "repo": "repo_name", "message": "description", "category": "category" }
-  ]
-}
+Return JSON: {"weaknesses":[{"repo":"name","issues":[{"severity":"high|medium|low","message":"desc"}],"score":0-100}],"strengths":[{"repo":"name","message":"desc","category":"cat"}]}
 
-Score each repo 0-100 for interview readiness. Focus on: test coverage, documentation, commit quality, code organization, language modernity, and project complexity.
-
-Return ONLY valid JSON, no markdown.`;
+Score 0-100 per repo. Return ONLY valid JSON, no markdown.`;
 }
 
 export function buildPracticePrompt(

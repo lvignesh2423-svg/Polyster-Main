@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
     const jsonStr = extractJSON(questionsRaw);
     let questions: InterviewQuestion[];
     try {
-      questions = JSON.parse(jsonStr);
+      const parsed = JSON.parse(jsonStr);
+      questions = Array.isArray(parsed) ? parsed : Array.isArray(parsed.questions) ? parsed.questions : [];
     } catch (e) {
       console.error("Questions parse error:", e);
-      console.error("Raw:", questionsRaw.slice(0, 500));
       questions = [];
     }
 
