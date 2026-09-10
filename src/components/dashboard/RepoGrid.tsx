@@ -1,0 +1,146 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { useStore } from "@/store/useStore";
+import GlassCard from "@/components/ui/GlassCard";
+
+const LANG_COLORS: Record<string, string> = {
+  TypeScript: "#3178C6",
+  JavaScript: "#F7DF1E",
+  Python: "#3572A5",
+  Java: "#B07219",
+  Go: "#00ADD8",
+  Rust: "#DEA584",
+  C: "#555555",
+  "C++": "#F34B7D",
+  Ruby: "#701516",
+  PHP: "#4F5D95",
+  Swift: "#F05138",
+  Kotlin: "#A97BFF",
+  Dart: "#00B4AB",
+  HTML: "#E34F26",
+  CSS: "#563D7C",
+  Shell: "#89E051",
+  Vue: "#41B883",
+  SCSS: "#C6538C",
+};
+
+export default function RepoGrid() {
+  const { repos, selectedRepos, toggleRepo } = useStore();
+
+  if (!repos.length) return null;
+
+  return (
+    <div className="space-y-4">
+      <h3
+        className="text-lg font-semibold uppercase tracking-widest"
+        style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--text-secondary)" }}
+      >
+        Repositories ({repos.length})
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {repos.map((repo, i) => {
+          const isSelected = selectedRepos.includes(repo.full_name);
+          const totalBytes = Object.values(repo.languages).reduce((a, b) => a + b, 0);
+
+          return (
+            <GlassCard key={repo.id} delay={i * 0.05} className="p-5 cursor-pointer">
+              <div onClick={() => toggleRepo(repo.full_name)}>
+                <div className="flex items-start justify-between mb-3">
+                  <h4
+                    className="text-sm font-semibold truncate flex-1"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    {repo.name}
+                  </h4>
+                  {repo.interviewRelevance > 60 && (
+                    <span className="badge badge-success text-[10px] ml-2">TOP</span>
+                  )}
+                </div>
+
+                <p
+                  className="text-xs mb-3 line-clamp-2"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {repo.description || "No description"}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {Object.entries(repo.languages)
+                    .sort(([, a], [, b]) => b - a)
+                    .slice(0, 4)
+                    .map(([lang]) => (
+                      <span
+                        key={lang}
+                        className="text-[10px] px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${LANG_COLORS[lang] || "#666"}20`,
+                          color: LANG_COLORS[lang] || "#999",
+                          border: `1px solid ${LANG_COLORS[lang] || "#666"}40`,
+                        }}
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                </div>
+
+                <div
+                  className="flex items-center gap-4 text-[11px]"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  <span className="flex items-center gap-1">
+                    <span className="text-yellow-400">&#9733;</span> {repo.stargazers_count}
+                  </span>
+                  <span>Fork {repo.forks_count}</span>
+                  <span>{repo.commits.length} commits</span>
+                </div>
+
+                <div className="mt-3 progress-bar">
+                  <div
+                    className="progress-bar-fill"
+                    style={{ width: `${repo.interviewRelevance}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>
+                    Interview relevance
+                  </span>
+                  <span
+                    className="text-[10px] font-semibold"
+                    style={{ fontFamily: "'Chakra Petch', monospace", color: "var(--accent-cyan)" }}
+                  >
+                    {repo.interviewRelevance}%
+                  </span>
+                </div>
+
+                {repo.weaknessFlags.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {repo.weaknessFlags.slice(0, 2).map((flag) => (
+                      <div
+                        key={flag}
+                        className="text-[10px] flex items-center gap-1"
+                        style={{ color: "var(--warning)" }}
+                      >
+                        <span>&#9888;</span> {flag}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {isSelected && (
+                <motion.div
+                  className="mt-3 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <span className="badge badge-violet text-[10px]">Selected</span>
+                </motion.div>
+              )}
+            </GlassCard>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
