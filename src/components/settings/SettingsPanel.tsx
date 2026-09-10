@@ -146,7 +146,7 @@ export default function SettingsPanel() {
                   />
                   <input
                     type="password"
-                    placeholder="NVIDIA API Key"
+                    placeholder="OpenRouter API Key"
                     className="neon-input text-sm"
                     style={{ borderRadius: "10px", padding: "10px 14px" }}
                     value={nvidiaKey}

@@ -1,17 +1,21 @@
 import OpenAI from "openai";
 
-const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const NVIDIA_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct";
+const BASE_URL = "https://openrouter.ai/api/v1";
+const MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
   if (!client) {
-    const apiKey = process.env.NVIDIA_API_KEY;
-    if (!apiKey) throw new Error("NVIDIA_API_KEY is not set");
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set. Get a free key at https://openrouter.ai");
     client = new OpenAI({
       apiKey,
-      baseURL: NVIDIA_BASE_URL,
+      baseURL: BASE_URL,
+      defaultHeaders: {
+        "HTTP-Referer": "https://repo-interview-ai.local",
+        "X-Title": "RepoInterview AI",
+      },
     });
   }
   return client;
@@ -25,7 +29,7 @@ export async function generateCompletion(
 ): Promise<string> {
   const openai = getClient();
   const response = await openai.chat.completions.create({
-    model: NVIDIA_MODEL,
+    model: MODEL,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -44,7 +48,7 @@ export async function generateCompletionStream(
 ): Promise<ReadableStream<string>> {
   const openai = getClient();
   const response = await openai.chat.completions.create({
-    model: NVIDIA_MODEL,
+    model: MODEL,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -75,7 +79,7 @@ export async function chatCompletion(
 ): Promise<string> {
   const openai = getClient();
   const response = await openai.chat.completions.create({
-    model: NVIDIA_MODEL,
+    model: MODEL,
     messages,
     max_tokens: maxTokens,
     temperature,

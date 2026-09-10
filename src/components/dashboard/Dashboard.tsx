@@ -81,7 +81,7 @@ export default function Dashboard() {
 
           <footer className="text-center py-8 border-t border-white/5">
             <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-              RepoInterview AI &mdash; Built with Next.js + NVIDIA Llama 3.1 70B
+              RepoInterview AI &mdash; Built with Next.js + Llama 3.3 70B via OpenRouter
             </p>
           </footer>
         </main>
