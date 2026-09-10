@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const questionsRaw = await generateCompletion(
       "You are an expert technical interviewer. Return ONLY a valid JSON array. No markdown, no explanation, no thinking, no reasoning — just the raw JSON array.",
       questionPrompt,
-      16384,
+      4096,
       0.7
     );
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const analysisRaw = await generateCompletion(
       "You are a code quality analyst. Return ONLY a valid JSON object. No markdown, no explanation, no thinking — just the raw JSON.",
       weaknessPrompt,
-      8192,
+      2048,
       0.3
     );
 

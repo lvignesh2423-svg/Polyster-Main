@@ -40,67 +40,23 @@ export function buildQuestionGenerationPrompt(
   const reposSummary = repos
     .map(
       (r) => `
-REPO: ${r.full_name}
-Description: ${r.description || "No description"}
-Languages: ${Object.keys(r.languages).join(", ")}
-Stars: ${r.stargazers_count} | Forks: ${r.forks_count}
-Topics: ${r.topics.join(", ") || "none"}
-License: ${r.license?.name || "None"}
-Last pushed: ${r.pushed_at}
-README length: ${r.readme?.length || 0} chars
-File count: ${r.files.length}
-Commit count: ${r.commits.length}
-Weakness flags: ${r.weaknessFlags.join("; ") || "none"}
-Strengths: ${r.strengths.join("; ") || "none"}
-Key files: ${r.files
-        .slice(0, 15)
-        .map((f) => f.path)
-        .join(", ")}
-`
+${r.full_name}: ${Object.keys(r.languages).join(", ")} | ⭐${r.stargazers_count} | Files: ${r.files.slice(0, 8).map((f) => f.path).join(", ")} | Weakness: ${r.weaknessFlags.slice(0, 2).join("; ") || "none"}`
     )
-    .join("\n---\n");
+    .join("\n");
 
-  return `You are an expert technical interviewer analyzing a GitHub portfolio.
+  return `Analyze GitHub portfolio and generate 10 interview questions.
 
-## Developer Profile
-- Username: ${profile.login}
-- Name: ${profile.name}
-- Bio: ${profile.bio || "N/A"}
-- Public repos: ${profile.public_repos}
-- Followers: ${profile.followers}
+Developer: ${profile.login} (${profile.name || "N/A"}) — ${profile.bio || "N/A"} — ${profile.public_repos} repos
+Config: difficulty=${difficulty} role=${role} company=${companyStyle}
 
-## Interview Configuration
-- Difficulty: ${difficulty} — ${DIFFERENCE_INSTRUCTIONS[difficulty]}
-- Role focus: ${role} — ${ROLE_INSTRUCTIONS[role]}
-- Company style: ${companyStyle} — ${COMPANY_INSTRUCTIONS[companyStyle]}
-
-## Repositories (sorted by interview relevance)
+Repos:
 ${reposSummary}
 
-## Task
-Generate exactly 10 interview questions:
-A. Project Deep-Dive (2) — architecture walkthroughs
-B. Technical Decisions (2) — technology choice rationale
-C. Code-Specific (2) — reference actual files
-D. Problem-Solving (1) — scaling challenges
-E. Behavioral (1) — teamwork, lessons learned
-F. Gaps & Red Flags (1) — missing tests, poor docs
-G. Trending (1) — modern alternatives
+Each question: {"id":"unique","category":"cat","question":"text","modelAnswer":"2-3 paragraphs","keyPoints":["p1","p2","p3"],"commonMistakes":["m1","m2"],"followUp":"text","relatedRepo":"name","relatedFile":"path"}
 
-Return a JSON array. Each element:
-{
-  "id": "unique-id",
-  "category": "one of the category slugs above",
-  "question": "The question in interviewer tone",
-  "modelAnswer": "2-4 paragraph model answer referencing actual repos/files",
-  "keyPoints": ["what interviewer listens for 1", "...2", "...3"],
-  "commonMistakes": ["mistake 1", "mistake 2"],
-  "followUp": "Follow-up question the interviewer might ask",
-  "relatedRepo": "repo full_name",
-  "relatedFile": "optional file path"
-}
+Categories: project-deep-dive, technical-decisions, code-specific, problem-solving, behavioral, gaps-red-flags, trending
 
-IMPORTANT: Return ONLY valid JSON array, no markdown, no explanation.`;
+Return ONLY valid JSON array, no markdown.`;
 }
 
 export function buildChatSystemPrompt(
@@ -110,24 +66,16 @@ export function buildChatSystemPrompt(
   const reposContext = repos
     .map(
       (r) =>
-        `${r.full_name}: ${r.description || "no desc"} [${Object.keys(r.languages).join(", ")}] Stars:${r.stargazers_count} Files:${r.files.map((f) => f.path).join(", ")}`
+        `${r.full_name}: [${Object.keys(r.languages).join(", ")}] ⭐${r.stargazers_count}`
     )
     .join("\n");
 
-  return `You are RepoInterview AI, an expert technical interviewer and code analyst.
+  return `You are RepoInterview AI, an expert interviewer analyzing ${profile.login}'s GitHub (${profile.bio || "N/A"}, ${profile.public_repos} repos).
 
-## Developer Being Analyzed
-- ${profile.login} (${profile.name || "N/A"})
-- ${profile.bio || "No bio"}
-- ${profile.public_repos} public repos, ${profile.followers} followers
-
-## Their Repositories
+Repos:
 ${reposContext}
 
-## Your Role
-Answer questions about this developer's GitHub portfolio with specific references to their repos, files, code patterns, and commit history. Be helpful, specific, and cite file paths when relevant. If you don't have enough information, say so honestly.
-
-Always respond in a conversational but technically precise tone. Reference specific repos and files when possible.`;
+Answer questions about this developer's portfolio with specific references to repos and files. Be concise and helpful. If you don't know, say so.`;
 }
 
 export function buildWeaknessAnalysisPrompt(
