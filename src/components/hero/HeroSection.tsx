@@ -1,23 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
-import dynamic from "next/dynamic";
-
-const RepoScene = dynamic(() => import("@/components/3d/RepoScene"), {
-  ssr: false,
-  loading: () => null,
-});
 
 export default function HeroSection() {
   const [input, setInput] = useState("");
   const { setView, setProfile, setRepos, setIsLoading, setLoadingMessage } =
     useStore();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handler = (e: MouseEvent) => {
       setMousePos({
         x: (e.clientX / window.innerWidth - 0.5) * 20,
@@ -102,14 +97,42 @@ export default function HeroSection() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
-      <RepoScene />
-
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `radial-gradient(circle at ${50 + mousePos.x * 0.5}% ${50 + mousePos.y * 0.5}%, rgba(124, 58, 237, 0.12) 0%, transparent 60%)`,
+          transition: "background 0.3s ease",
         }}
       />
+
+      {mounted && (
+        <>
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-xl border border-white/5"
+              style={{
+                width: 120 + i * 40,
+                height: 80 + i * 20,
+                left: `${15 + i * 15}%`,
+                top: `${20 + (i % 3) * 25}%`,
+                background: `linear-gradient(135deg, rgba(${i % 2 === 0 ? "124,58,237" : "34,211,238"}, 0.03), transparent)`,
+              }}
+              animate={{
+                y: [0, -10, 0],
+                rotateY: [0, 5, 0],
+                rotateX: [0, 2, 0],
+              }}
+              transition={{
+                duration: 6 + i,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.8,
+              }}
+            />
+          ))}
+        </>
+      )}
 
       <motion.div
         className="relative z-10 text-center max-w-4xl mx-auto"
@@ -150,18 +173,12 @@ export default function HeroSection() {
 
         <div className="relative max-w-2xl mx-auto mb-8">
           <input
-            ref={inputRef}
             type="text"
             placeholder="github.com/username or @handle"
             className="neon-input text-center"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-          />
-          <div className="absolute inset-0 rounded-full pointer-events-none"
-            style={{
-              background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.05), transparent)",
-            }}
           />
         </div>
 
