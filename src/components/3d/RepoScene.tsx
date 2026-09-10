@@ -55,7 +55,7 @@ function RepoCard({ position, color }: { position: [number, number, number]; col
 
   return (
     <mesh ref={mesh} position={position}>
-      <roundedBoxGeometry args={[1.2, 0.8, 0.08, 4, 0.06]} />
+      <boxGeometry args={[1.2, 0.8, 0.08]} />
       <meshStandardMaterial
         color={color}
         transparent
