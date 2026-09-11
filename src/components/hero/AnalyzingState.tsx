@@ -19,7 +19,7 @@ export default function AnalyzingState() {
 
         <motion.h2
           className="text-2xl font-semibold mb-4"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-green)" }}
           key={loadingMessage}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

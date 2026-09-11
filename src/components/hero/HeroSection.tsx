@@ -6,7 +6,7 @@ import { useStore } from "@/store/useStore";
 
 export default function HeroSection() {
   const [input, setInput] = useState("");
-  const { setView, setProfile, setRepos, setIsLoading, setLoadingMessage } =
+  const { setView, setProfile, setRepos, setIsLoading, setLoadingMessage, difficulty, role, companyStyle } =
     useStore();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
@@ -32,28 +32,22 @@ export default function HeroSection() {
     try {
       const steps = [
         { msg: "Fetching GitHub profile...", delay: 0 },
-        { msg: "Cloning repositories...", delay: 1500 },
-        { msg: "Analyzing code structure...", delay: 3000 },
-        { msg: "Reading commit history...", delay: 4500 },
-        { msg: "Building interview intelligence...", delay: 6000 },
+        { msg: "Cloning repositories...", delay: 1200 },
+        { msg: "Analyzing code structure...", delay: 2400 },
+        { msg: "Building interview intelligence...", delay: 3600 },
       ];
-
-      steps.forEach((step) => {
-        setTimeout(() => setLoadingMessage(step.msg), step.delay);
-      });
+      steps.forEach((step) => setTimeout(() => setLoadingMessage(step.msg), step.delay));
 
       const res = await fetch("/api/github", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input: input.trim() }),
       });
-
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
       setProfile(data.profile);
       setRepos(data.repos);
-
       setLoadingMessage("Generating interview questions...");
 
       const qRes = await fetch("/api/questions", {
@@ -62,12 +56,11 @@ export default function HeroSection() {
         body: JSON.stringify({
           profile: data.profile,
           repos: data.repos,
-          difficulty: "mid",
-          role: "fullstack",
-          companyStyle: "faang",
+          difficulty,
+          role,
+          companyStyle,
         }),
       });
-
       const qData = await qRes.json();
       if (qData.error) throw new Error(qData.error);
 
@@ -86,7 +79,7 @@ export default function HeroSection() {
       useStore.getState().setFlashcards(flashcards);
 
       setLoadingMessage("Dashboard ready!");
-      setTimeout(() => setView("dashboard"), 1000);
+      setTimeout(() => setView("dashboard"), 800);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Something went wrong");
       setView("hero");
@@ -100,34 +93,36 @@ export default function HeroSection() {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(circle at ${50 + mousePos.x * 0.5}% ${50 + mousePos.y * 0.5}%, rgba(124, 58, 237, 0.12) 0%, transparent 60%)`,
+          background: `radial-gradient(circle at ${50 + mousePos.x * 0.5}% ${50 + mousePos.y * 0.5}%, rgba(57, 255, 20, 0.07) 0%, transparent 55%)`,
           transition: "background 0.3s ease",
         }}
       />
 
       {mounted && (
         <>
-          {[...Array(5)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute rounded-xl border border-white/5"
+              className="shape-3d"
               style={{
-                width: 120 + i * 40,
-                height: 80 + i * 20,
-                left: `${15 + i * 15}%`,
-                top: `${20 + (i % 3) * 25}%`,
-                background: `linear-gradient(135deg, rgba(${i % 2 === 0 ? "124,58,237" : "34,211,238"}, 0.03), transparent)`,
+                width: 100 + i * 50,
+                height: 60 + i * 30,
+                left: `${10 + i * 14}%`,
+                top: `${15 + (i % 3) * 28}%`,
+                borderRadius: i % 2 === 0 ? "20px" : "50%",
+                border: `1px solid rgba(57, 255, 20, ${0.03 + i * 0.005})`,
+                background: `linear-gradient(135deg, rgba(57, 255, 20, ${0.01 + i * 0.003}), transparent)`,
               }}
               animate={{
-                y: [0, -10, 0],
-                rotateY: [0, 5, 0],
-                rotateX: [0, 2, 0],
+                y: [0, -12, 0],
+                rotateY: [0, 8, 0],
+                rotateX: [0, 3, 0],
               }}
               transition={{
-                duration: 6 + i,
+                duration: 7 + i,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: i * 0.8,
+                delay: i * 0.7,
               }}
             />
           ))}
@@ -146,26 +141,24 @@ export default function HeroSection() {
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          <span className="badge badge-violet text-xs">
-            AI-Powered Interview Prep
-          </span>
+          <span className="badge badge-green text-xs">AI-Powered Interview Prep</span>
         </motion.div>
 
         <h1
-          className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "0.02em" }}
+          className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight"
+          style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "0.02em" }}
         >
-          <span className="text-glow-violet">Repo</span>
-          <span className="text-cyan text-glow-cyan">Interview</span>
+          <span className="text-glow-green" style={{ color: "var(--accent-green)" }}>Repo</span>
+          <span className="text-glow-cyan" style={{ color: "var(--accent-cyan)" }}>Interview</span>
           <br />
-          <span className="text-3xl md:text-4xl text-text-secondary font-light">
+          <span className="text-3xl md:text-4xl font-light" style={{ color: "var(--text-secondary)" }}>
             AI
           </span>
         </h1>
 
         <p
           className="text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed"
-          style={{ fontFamily: "'Sora', sans-serif", color: "var(--text-secondary)" }}
+          style={{ fontFamily: "'Outfit', sans-serif", color: "var(--text-secondary)" }}
         >
           Paste your GitHub profile. AI reads every repo, generates real
           interview questions, and coaches you on YOUR code.
@@ -183,16 +176,17 @@ export default function HeroSection() {
         </div>
 
         <motion.button
-          className="btn-primary text-lg px-10 py-4"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="btn-primary text-base px-10 py-4"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={handleAnalyze}
           disabled={!input.trim()}
         >
           Analyze Portfolio
         </motion.button>
 
-        <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm"
+        <div
+          className="mt-12 flex flex-wrap justify-center gap-6 text-sm"
           style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--text-secondary)" }}
         >
           {["AI-Generated Questions", "Live Q&A", "Mock Interviews", "Weakness Reports"].map(
@@ -204,7 +198,10 @@ export default function HeroSection() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + i * 0.1 }}
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-violet" />
+                <div
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: "var(--accent-green)", boxShadow: "0 0 6px rgba(57, 255, 20, 0.5)" }}
+                />
                 {feat}
               </motion.div>
             )

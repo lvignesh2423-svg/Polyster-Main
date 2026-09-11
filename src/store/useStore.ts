@@ -13,7 +13,7 @@ import type {
 } from "@/lib/types";
 
 interface AppState {
-  view: "hero" | "analyzing" | "dashboard";
+  view: "hero" | "analyzing" | "dashboard" | "qa" | "flashcards" | "mock";
   setView: (v: AppState["view"]) => void;
 
   profile: GitHubProfile | null;
@@ -73,6 +73,9 @@ interface AppState {
 
   nvidiaKey: string;
   setNvidiaKey: (k: string) => void;
+
+  isRegenerating: boolean;
+  setIsRegenerating: (r: boolean) => void;
 
   reset: () => void;
 }
@@ -144,6 +147,9 @@ export const useStore = create<AppState>((set) => ({
 
   nvidiaKey: "",
   setNvidiaKey: (nvidiaKey) => set({ nvidiaKey }),
+
+  isRegenerating: false,
+  setIsRegenerating: (isRegenerating) => set({ isRegenerating }),
 
   reset: () =>
     set({

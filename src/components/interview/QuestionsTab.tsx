@@ -26,7 +26,7 @@ export default function QuestionsTab() {
             key={cat}
             onClick={() => setFilter(cat)}
             className={`badge text-xs cursor-pointer transition-all ${
-              filter === cat ? "badge-violet" : "badge-violet opacity-40"
+              filter === cat ? "badge-green" : "badge-green opacity-40"
             }`}
             style={{ opacity: filter === cat ? 1 : 0.4 }}
           >

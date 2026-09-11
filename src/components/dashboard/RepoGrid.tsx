@@ -33,15 +33,14 @@ export default function RepoGrid() {
   return (
     <div className="space-y-4">
       <h3
-        className="text-lg font-semibold uppercase tracking-widest"
-        style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--text-secondary)" }}
+        className="text-sm font-bold uppercase tracking-widest"
+        style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-secondary)" }}
       >
         Repositories ({repos.length})
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {repos.map((repo, i) => {
           const isSelected = selectedRepos.includes(repo.full_name);
-          const totalBytes = Object.values(repo.languages).reduce((a, b) => a + b, 0);
 
           return (
             <GlassCard key={repo.id} delay={i * 0.05} className="p-5 cursor-pointer">
@@ -72,7 +71,7 @@ export default function RepoGrid() {
                     .map(([lang]) => (
                       <span
                         key={lang}
-                        className="text-[10px] px-2 py-0.5 rounded-full"
+                        className="text-[10px] px-2 py-0.5 rounded-md"
                         style={{
                           background: `${LANG_COLORS[lang] || "#666"}20`,
                           color: LANG_COLORS[lang] || "#999",
@@ -89,7 +88,7 @@ export default function RepoGrid() {
                   style={{ color: "var(--text-secondary)" }}
                 >
                   <span className="flex items-center gap-1">
-                    <span className="text-yellow-400">&#9733;</span> {repo.stargazers_count}
+                    <span style={{ color: "var(--accent-green)" }}>&#9733;</span> {repo.stargazers_count}
                   </span>
                   <span>Fork {repo.forks_count}</span>
                   <span>{repo.commits.length} commits</span>
@@ -106,8 +105,8 @@ export default function RepoGrid() {
                     Interview relevance
                   </span>
                   <span
-                    className="text-[10px] font-semibold"
-                    style={{ fontFamily: "'Chakra Petch', monospace", color: "var(--accent-cyan)" }}
+                    className="text-[10px] font-bold"
+                    style={{ fontFamily: "'Space Grotesk', monospace", color: "var(--accent-green)" }}
                   >
                     {repo.interviewRelevance}%
                   </span>
@@ -134,7 +133,7 @@ export default function RepoGrid() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
-                  <span className="badge badge-violet text-[10px]">Selected</span>
+                  <span className="badge badge-green text-[10px]">Selected</span>
                 </motion.div>
               )}
             </GlassCard>

@@ -21,14 +21,61 @@ export default function SettingsPanel() {
     setGithubToken,
     nvidiaKey,
     setNvidiaKey,
+    profile,
+    repos,
+    setQuestions,
+    setWeaknesses,
+    setStrengths,
+    setFlashcards,
+    isRegenerating,
+    setIsRegenerating,
   } = useStore();
+
+  const handleReload = async () => {
+    if (!profile || !repos.length || isRegenerating) return;
+    setIsRegenerating(true);
+    try {
+      const qRes = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile,
+          repos,
+          difficulty,
+          role,
+          companyStyle,
+        }),
+      });
+      const qData = await qRes.json();
+      if (qData.error) throw new Error(qData.error);
+
+      setQuestions(qData.questions || []);
+      setWeaknesses(qData.weaknesses || []);
+      setStrengths(qData.strengths || []);
+
+      const flashcards = (qData.questions || []).map(
+        (q: { id: string; question: string; modelAnswer: string; relatedRepo: string }) => ({
+          id: q.id,
+          front: q.question,
+          back: q.modelAnswer,
+          repo: q.relatedRepo,
+        })
+      );
+      setFlashcards(flashcards);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to regenerate");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   return (
     <AnimatePresence>
       {showSettings && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 backdrop-blur-sm z-40"
+            style={{ background: "rgba(5, 5, 8, 0.7)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -37,8 +84,9 @@ export default function SettingsPanel() {
           <motion.div
             className="fixed right-0 top-0 bottom-0 w-96 max-w-full z-50 overflow-y-auto"
             style={{
-              background: "linear-gradient(135deg, var(--bg-surface), var(--bg-elevated))",
-              borderLeft: "1px solid rgba(255,255,255,0.06)",
+              background: "linear-gradient(135deg, rgba(10, 10, 16, 0.98), rgba(15, 15, 24, 0.95))",
+              borderLeft: "1px solid rgba(57, 255, 20, 0.08)",
+              backdropFilter: "blur(30px)",
             }}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -48,8 +96,8 @@ export default function SettingsPanel() {
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <h2
-                  className="text-lg font-semibold"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  className="text-lg font-bold"
+                  style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-green)" }}
                 >
                   Settings
                 </h2>
@@ -127,6 +175,18 @@ export default function SettingsPanel() {
                   ))}
                 </div>
               </div>
+
+              {profile && repos.length > 0 && (
+                <motion.button
+                  className="btn-primary w-full text-sm py-3"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleReload}
+                  disabled={isRegenerating}
+                >
+                  {isRegenerating ? "Regenerating..." : "Reload Questions"}
+                </motion.button>
+              )}
 
               <div className="space-y-3">
                 <label

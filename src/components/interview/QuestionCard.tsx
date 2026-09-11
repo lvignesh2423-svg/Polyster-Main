@@ -11,15 +11,15 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
   const categoryColor = (cat: QuestionCategory) => {
     const map: Record<QuestionCategory, string> = {
       "project-deep-dive": "badge-cyan",
-      "technical-decisions": "badge-violet",
-      "code-specific": "badge-magenta",
+      "technical-decisions": "badge-green",
+      "code-specific": "badge-teal",
       "problem-solving": "badge-cyan",
       "debugging-scenarios": "badge-warning",
       behavioral: "badge-success",
       "gaps-red-flags": "badge-error",
-      "trending-modern": "badge-violet",
+      "trending-modern": "badge-lime",
     };
-    return map[cat] || "badge-violet";
+    return map[cat] || "badge-green";
   };
 
   return (
@@ -29,7 +29,7 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ borderColor: "rgba(124, 58, 237, 0.3)" }}
+      whileHover={{ borderColor: "rgba(57, 255, 20, 0.2)" }}
     >
       <div className="flex items-start gap-3">
         <span className="text-lg mt-0.5">
@@ -48,7 +48,7 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
           </div>
           <h4
             className="text-sm font-semibold leading-relaxed"
-            style={{ fontFamily: "'Sora', sans-serif" }}
+            style={{ fontFamily: "'Outfit', sans-serif" }}
           >
             {question.question}
           </h4>
@@ -71,33 +71,30 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
+            <div className="mt-4 pt-4 border-t space-y-4" style={{ borderColor: "rgba(57, 255, 20, 0.06)" }}>
               <div>
                 <h5
-                  className="text-[10px] uppercase tracking-widest mb-2 font-semibold"
+                  className="text-[10px] uppercase tracking-widest mb-2 font-bold"
                   style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--accent-cyan)" }}
                 >
                   Model Answer
                 </h5>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--text-secondary)" }}
-                >
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                   {question.modelAnswer}
                 </p>
               </div>
 
               <div>
                 <h5
-                  className="text-[10px] uppercase tracking-widest mb-2 font-semibold"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--accent-violet)" }}
+                  className="text-[10px] uppercase tracking-widest mb-2 font-bold"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--accent-green)" }}
                 >
-                  Key Points Interviewer Listens For
+                  Key Points
                 </h5>
                 <ul className="space-y-1">
                   {question.keyPoints.map((kp, i) => (
                     <li key={i} className="text-sm flex items-start gap-2" style={{ color: "var(--text-secondary)" }}>
-                      <span className="text-cyan mt-0.5">&#10003;</span> {kp}
+                      <span style={{ color: "var(--accent-green)" }}>&#10003;</span> {kp}
                     </li>
                   ))}
                 </ul>
@@ -105,15 +102,15 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
 
               <div>
                 <h5
-                  className="text-[10px] uppercase tracking-widest mb-2 font-semibold"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--accent-magenta)" }}
+                  className="text-[10px] uppercase tracking-widest mb-2 font-bold"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--error)" }}
                 >
                   Common Mistakes
                 </h5>
                 <ul className="space-y-1">
                   {question.commonMistakes.map((cm, i) => (
                     <li key={i} className="text-sm flex items-start gap-2" style={{ color: "var(--text-secondary)" }}>
-                      <span className="text-error mt-0.5">&#10007;</span> {cm}
+                      <span style={{ color: "var(--error)" }}>&#10007;</span> {cm}
                     </li>
                   ))}
                 </ul>
@@ -122,13 +119,13 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
               {question.followUp && (
                 <div
                   className="glass-card p-3 rounded-xl"
-                  style={{ borderColor: "rgba(245, 158, 11, 0.2)" }}
+                  style={{ borderColor: "rgba(255, 214, 0, 0.15)" }}
                 >
                   <h5
-                    className="text-[10px] uppercase tracking-widest mb-1 font-semibold"
+                    className="text-[10px] uppercase tracking-widest mb-1 font-bold"
                     style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--warning)" }}
                   >
-                    Follow-up Question
+                    Follow-up
                   </h5>
                   <p className="text-sm italic" style={{ color: "var(--text-secondary)" }}>
                     {question.followUp}
@@ -138,7 +135,7 @@ export default function QuestionCard({ question }: { question: InterviewQuestion
 
               {question.relatedFile && (
                 <div className="text-[11px] flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
-                  <span>&#128196;</span> Referenced file: <span className="text-cyan font-mono">{question.relatedFile}</span>
+                  <span>&#128196;</span> Referenced: <span style={{ color: "var(--accent-green)", fontFamily: "'JetBrains Mono', monospace" }}>{question.relatedFile}</span>
                 </div>
               )}
             </div>

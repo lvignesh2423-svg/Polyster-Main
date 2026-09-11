@@ -17,7 +17,7 @@ export default function ProfileCard() {
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
-          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-violet/30">
+          <div className="w-24 h-24 rounded-full overflow-hidden" style={{ border: "2px solid rgba(57, 255, 20, 0.25)" }}>
             <Image
               src={profile.avatar_url}
               alt={profile.login}
@@ -26,20 +26,20 @@ export default function ProfileCard() {
               className="object-cover"
             />
           </div>
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-success border-2 border-surface flex items-center justify-center text-[10px]">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px]" style={{ background: "var(--accent-green)", border: "2px solid var(--bg-surface)" }}>
           </div>
         </motion.div>
 
         <div className="flex-1 text-center md:text-left">
           <h2
             className="text-2xl font-bold"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'Syne', sans-serif" }}
           >
             {profile.name || profile.login}
           </h2>
           <p
             className="text-sm mt-1"
-            style={{ fontFamily: "'Sora', sans-serif", color: "var(--text-secondary)" }}
+            style={{ fontFamily: "'Outfit', sans-serif", color: "var(--text-secondary)" }}
           >
             @{profile.login}
           </p>
@@ -59,8 +59,8 @@ export default function ProfileCard() {
           ].map((stat) => (
             <div key={stat.label} className="glass-card p-3 rounded-xl">
               <div
-                className="text-xl font-bold text-cyan"
-                style={{ fontFamily: "'Chakra Petch', monospace" }}
+                className="text-xl font-bold"
+                style={{ fontFamily: "'Space Grotesk', monospace", color: "var(--accent-green)" }}
               >
                 {stat.value}
               </div>

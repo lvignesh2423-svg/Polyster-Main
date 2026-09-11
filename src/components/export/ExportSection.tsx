@@ -19,9 +19,7 @@ export default function ExportSection() {
           strengths,
         }),
       });
-
       if (!res.ok) throw new Error("Export failed");
-
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -34,18 +32,29 @@ export default function ExportSection() {
     }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(
-      `${window.location.origin}?user=${profile?.login || ""}`
-    );
-    alert("Link copied!");
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}?user=${profile?.login || ""}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      alert("Link copied!");
+    }
   };
 
   return (
     <GlassCard className="p-6" delay={0}>
       <h3
         className="text-lg font-semibold mb-4"
-        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-green)" }}
       >
         Export & Share
       </h3>

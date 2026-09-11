@@ -18,7 +18,6 @@ export default function WeaknessReport() {
 
   const chartData = useMemo(() => {
     if (!repos.length) return [];
-
     const categories = [
       { label: "Documentation", key: "docs" },
       { label: "Testing", key: "tests" },
@@ -27,26 +26,14 @@ export default function WeaknessReport() {
       { label: "Languages", key: "languages" },
       { label: "Community", key: "community" },
     ];
-
     return categories.map((cat) => {
       let score = 50;
       switch (cat.key) {
         case "docs":
-          score = repos.reduce((acc, r) => {
-            const hasGoodDocs = (r.readme?.length || 0) > 500;
-            return acc + (hasGoodDocs ? 1 : 0);
-          }, 0) / repos.length * 100;
+          score = repos.reduce((acc, r) => acc + ((r.readme?.length || 0) > 500 ? 1 : 0), 0) / repos.length * 100;
           break;
         case "tests":
-          score = repos.reduce((acc, r) => {
-            const hasTests = r.files.some(
-              (f) =>
-                f.path.includes("test") ||
-                f.path.includes("spec") ||
-                f.path.includes("__tests__")
-            );
-            return acc + (hasTests ? 1 : 0);
-          }, 0) / repos.length * 100;
+          score = repos.reduce((acc, r) => acc + (r.files.some((f) => f.path.includes("test") || f.path.includes("spec") || f.path.includes("__tests__")) ? 1 : 0), 0) / repos.length * 100;
           break;
         case "activity":
           score = repos.reduce((acc, r) => acc + r.commits.length, 0) / (repos.length * 20) * 100;
@@ -55,14 +42,10 @@ export default function WeaknessReport() {
           score = repos.reduce((acc, r) => acc + r.files.length, 0) / (repos.length * 20) * 100;
           break;
         case "languages":
-          score =
-            repos.reduce((acc, r) => acc + Object.keys(r.languages).length, 0) /
-            (repos.length * 3) * 100;
+          score = repos.reduce((acc, r) => acc + Object.keys(r.languages).length, 0) / (repos.length * 3) * 100;
           break;
         case "community":
-          score =
-            repos.reduce((acc, r) => acc + r.stargazers_count + r.forks_count, 0) /
-            (repos.length * 10) * 100;
+          score = repos.reduce((acc, r) => acc + r.stargazers_count + r.forks_count, 0) / (repos.length * 10) * 100;
           break;
       }
       return { category: cat.label, score: Math.min(100, Math.round(score)) };
@@ -72,8 +55,8 @@ export default function WeaknessReport() {
   return (
     <div className="space-y-6">
       <h3
-        className="text-lg font-semibold uppercase tracking-widest"
-        style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--text-secondary)" }}
+        className="text-sm font-bold uppercase tracking-widest"
+        style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-secondary)" }}
       >
         Analysis Report
       </h3>
@@ -82,29 +65,25 @@ export default function WeaknessReport() {
         <GlassCard className="p-6" delay={0}>
           <h4
             className="text-sm font-semibold mb-4"
-            style={{ fontFamily: "'Sora', sans-serif" }}
+            style={{ fontFamily: "'Outfit', sans-serif" }}
           >
             Portfolio Radar
           </h4>
           <div className="radar-container" style={{ height: 300 }}>
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={chartData}>
-                <PolarGrid stroke="rgba(255,255,255,0.05)" />
+                <PolarGrid stroke="rgba(57, 255, 20, 0.06)" />
                 <PolarAngleAxis
                   dataKey="category"
-                  tick={{ fill: "#A0A0B8", fontSize: 11, fontFamily: "Space Grotesk" }}
+                  tick={{ fill: "#7a9a7a", fontSize: 11, fontFamily: "Space Grotesk" }}
                 />
-                <PolarRadiusAxis
-                  angle={30}
-                  domain={[0, 100]}
-                  tick={{ fill: "#A0A0B8", fontSize: 10 }}
-                />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#7a9a7a", fontSize: 10 }} />
                 <Radar
                   name="Score"
                   dataKey="score"
-                  stroke="#7C3AED"
-                  fill="#7C3AED"
-                  fillOpacity={0.2}
+                  stroke="#39FF14"
+                  fill="#39FF14"
+                  fillOpacity={0.15}
                   strokeWidth={2}
                 />
               </RadarChart>
@@ -117,16 +96,16 @@ export default function WeaknessReport() {
         <GlassCard className="p-6" delay={0.1}>
           <h4
             className="text-sm font-semibold mb-3 flex items-center gap-2"
-            style={{ fontFamily: "'Sora', sans-serif" }}
+            style={{ fontFamily: "'Outfit', sans-serif" }}
           >
-            <span className="text-success">&#10003;</span> Strengths
+            <span style={{ color: "var(--accent-green)" }}>&#10003;</span> Strengths
           </h4>
           <div className="space-y-2">
             {strengths.map((s, i) => (
               <motion.div
                 key={i}
                 className="flex items-start gap-3 p-3 rounded-xl"
-                style={{ background: "rgba(16, 185, 129, 0.05)", border: "1px solid rgba(16, 185, 129, 0.1)" }}
+                style={{ background: "rgba(57, 255, 20, 0.03)", border: "1px solid rgba(57, 255, 20, 0.08)" }}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
@@ -146,16 +125,16 @@ export default function WeaknessReport() {
         <GlassCard className="p-6" delay={0.2}>
           <h4
             className="text-sm font-semibold mb-3 flex items-center gap-2"
-            style={{ fontFamily: "'Sora', sans-serif" }}
+            style={{ fontFamily: "'Outfit', sans-serif" }}
           >
-            <span className="text-error">&#9888;</span> Weaknesses
+            <span style={{ color: "var(--error)" }}>&#9888;</span> Weaknesses
           </h4>
           <div className="space-y-3">
             {weaknesses.map((w, i) => (
               <motion.div
                 key={i}
                 className="p-3 rounded-xl"
-                style={{ background: "rgba(239, 68, 68, 0.03)", border: "1px solid rgba(239, 68, 68, 0.1)" }}
+                style={{ background: "rgba(255, 61, 61, 0.02)", border: "1px solid rgba(255, 61, 61, 0.08)" }}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
@@ -164,7 +143,7 @@ export default function WeaknessReport() {
                   <p className="text-xs font-semibold">{w.repo}</p>
                   <span
                     className="text-xs font-bold"
-                    style={{ fontFamily: "'Chakra Petch', monospace", color: w.score > 60 ? "var(--success)" : w.score > 30 ? "var(--warning)" : "var(--error)" }}
+                    style={{ fontFamily: "'Space Grotesk', monospace", color: w.score > 60 ? "var(--accent-green)" : w.score > 30 ? "var(--warning)" : "var(--error)" }}
                   >
                     {w.score}/100
                   </span>
@@ -175,12 +154,7 @@ export default function WeaknessReport() {
                       <span
                         className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
                         style={{
-                          background:
-                            issue.severity === "high"
-                              ? "var(--error)"
-                              : issue.severity === "medium"
-                              ? "var(--warning)"
-                              : "var(--text-secondary)",
+                          background: issue.severity === "high" ? "var(--error)" : issue.severity === "medium" ? "var(--warning)" : "var(--text-secondary)",
                         }}
                       />
                       <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
