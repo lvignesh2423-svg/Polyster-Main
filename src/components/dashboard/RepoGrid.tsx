@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
 import GlassCard from "@/components/ui/GlassCard";
@@ -26,18 +27,113 @@ const LANG_COLORS: Record<string, string> = {
 };
 
 export default function RepoGrid() {
-  const { repos, selectedRepos, toggleRepo } = useStore();
+  const {
+    repos,
+    selectedRepos,
+    toggleRepo,
+    profile,
+    difficulty,
+    role,
+    companyStyle,
+    setQuestions,
+    setWeaknesses,
+    setStrengths,
+    setFlashcards,
+  } = useStore();
+
+  const [regenStatus, setRegenStatus] = React.useState<"idle" | "loading" | "done" | "error">("idle");
+  const [regenMsg, setRegenMsg] = React.useState("");
 
   if (!repos.length) return null;
 
+  const handleRegenSelected = async () => {
+    if (!profile || selectedRepos.length === 0 || regenStatus === "loading") return;
+
+    setRegenStatus("loading");
+    setRegenMsg("Generating questions for selected repos...");
+
+    try {
+      const reposToUse = repos.filter((r) => selectedRepos.includes(r.full_name));
+
+      const qRes = await fetch("/api/questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile,
+          repos: reposToUse,
+          difficulty,
+          role,
+          companyStyle,
+        }),
+      });
+      const qData = await qRes.json();
+      if (qData.error) throw new Error(qData.error);
+
+      const questions = Array.isArray(qData.questions) ? qData.questions : [];
+      setQuestions(questions);
+      setWeaknesses(qData.weaknesses || []);
+      setStrengths(qData.strengths || []);
+
+      const flashcards = questions.map(
+        (q: { id: string; question: string; modelAnswer: string; relatedRepo: string }) => ({
+          id: q.id,
+          front: q.question,
+          back: q.modelAnswer,
+          repo: q.relatedRepo || "",
+        })
+      );
+      setFlashcards(flashcards);
+
+      setRegenStatus("done");
+      setRegenMsg(`Generated ${questions.length} questions from ${reposToUse.length} repos`);
+      setTimeout(() => setRegenStatus("idle"), 2000);
+    } catch (err) {
+      setRegenStatus("error");
+      setRegenMsg(err instanceof Error ? err.message : "Failed");
+      setTimeout(() => setRegenStatus("idle"), 3000);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <h3
-        className="text-sm font-bold uppercase tracking-widest"
-        style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-secondary)" }}
-      >
-        Repositories ({repos.length})
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3
+          className="text-sm font-bold uppercase tracking-widest"
+          style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-secondary)" }}
+        >
+          Repositories ({repos.length})
+        </h3>
+        {selectedRepos.length > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-xs" style={{ color: "var(--accent-green)" }}>
+              {selectedRepos.length} selected
+            </span>
+            <motion.button
+              className="btn-primary text-[11px] px-4 py-2"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleRegenSelected}
+              disabled={regenStatus === "loading"}
+            >
+              {regenStatus === "loading" ? "Generating..." : "Regenerate from Selected"}
+            </motion.button>
+          </div>
+        )}
+      </div>
+
+      {regenMsg && (
+        <motion.p
+          className="text-xs"
+          style={{
+            color: regenStatus === "error" ? "var(--error)" : regenStatus === "done" ? "var(--accent-green)" : "var(--text-secondary)",
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {regenMsg}
+        </motion.p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {repos.map((repo, i) => {
           const isSelected = selectedRepos.includes(repo.full_name);

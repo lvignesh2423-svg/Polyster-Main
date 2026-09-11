@@ -68,15 +68,6 @@ interface AppState {
   showSettings: boolean;
   setShowSettings: (s: boolean) => void;
 
-  githubToken: string;
-  setGithubToken: (t: string) => void;
-
-  nvidiaKey: string;
-  setNvidiaKey: (k: string) => void;
-
-  isRegenerating: boolean;
-  setIsRegenerating: (r: boolean) => void;
-
   reset: () => void;
 }
 
@@ -141,15 +132,6 @@ export const useStore = create<AppState>((set) => ({
 
   showSettings: false,
   setShowSettings: (showSettings) => set({ showSettings }),
-
-  githubToken: "",
-  setGithubToken: (githubToken) => set({ githubToken }),
-
-  nvidiaKey: "",
-  setNvidiaKey: (nvidiaKey) => set({ nvidiaKey }),
-
-  isRegenerating: false,
-  setIsRegenerating: (isRegenerating) => set({ isRegenerating }),
 
   reset: () =>
     set({

@@ -73,7 +73,7 @@ export function extractJSON(raw: string): string {
 export async function generateCompletion(
   systemPrompt: string,
   userPrompt: string,
-  maxTokens = 4096,
+  maxTokens = 16384,
   temperature = 0.7
 ): Promise<string> {
   const openai = getClient();
@@ -89,41 +89,9 @@ export async function generateCompletion(
   return response.choices[0]?.message?.content || "";
 }
 
-export async function generateCompletionStream(
-  systemPrompt: string,
-  userPrompt: string,
-  maxTokens = 4096,
-  temperature = 0.7
-): Promise<ReadableStream<string>> {
-  const openai = getClient();
-  const response = await openai.chat.completions.create({
-    model: MODEL,
-    messages: [
-      { role: "system", content: userPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    max_tokens: maxTokens,
-    temperature,
-    stream: true,
-  });
-
-  return new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of response) {
-          const content = chunk.choices[0]?.delta?.content;
-          if (content) controller.enqueue(content);
-        }
-      } finally {
-        controller.close();
-      }
-    },
-  });
-}
-
 export async function chatCompletion(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
-  maxTokens = 2048,
+  maxTokens = 8192,
   temperature = 0.7
 ): Promise<string> {
   const openai = getClient();

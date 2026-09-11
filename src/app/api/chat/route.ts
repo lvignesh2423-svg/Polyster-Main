@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const raw = await chatCompletion(apiMessages, 4096, 0.7);
+    const raw = await chatCompletion(apiMessages, 8192, 0.7);
     const response = stripReasoning(raw);
 
     return Response.json({ response: response || "I apologize, please try again." });

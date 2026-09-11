@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useStore } from "@/store/useStore";
 import GlassCard from "@/components/ui/GlassCard";
 
 export default function ExportSection() {
   const { profile, questions, weaknesses, strengths } = useStore();
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = profile ? `${window.location.origin}?user=${profile.login}` : "";
 
   const handleExportMarkdown = async () => {
     try {
@@ -32,21 +36,19 @@ export default function ExportSection() {
     }
   };
 
-  const handleCopyLink = async () => {
-    const url = `${window.location.origin}?user=${profile?.login || ""}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      alert("Link copied to clipboard!");
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = url;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-9999px";
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      alert("Link copied!");
+  const handleCopy = () => {
+    if (!shareUrl) return;
+    const input = document.getElementById("share-url-input") as HTMLInputElement;
+    if (input) {
+      input.select();
+      input.setSelectionRange(0, 99999);
+      try {
+        navigator.clipboard.writeText(shareUrl);
+      } catch {
+        document.execCommand("copy");
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -58,17 +60,30 @@ export default function ExportSection() {
       >
         Export & Share
       </h3>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 mb-4">
         <button className="btn-primary text-sm" onClick={handleExportMarkdown}>
           Export as Markdown
         </button>
-        <button className="btn-secondary text-sm" onClick={handleCopyLink}>
-          Copy Share Link
-        </button>
       </div>
-      <p className="text-xs mt-3" style={{ color: "var(--text-secondary)" }}>
-        Download your interview prep sheet or share a read-only link.
-      </p>
+      {shareUrl && (
+        <div className="flex gap-2">
+          <input
+            id="share-url-input"
+            type="text"
+            readOnly
+            value={shareUrl}
+            className="neon-input flex-1 text-xs"
+            style={{ borderRadius: "8px", padding: "8px 12px", cursor: "text" }}
+            onClick={(e) => (e.target as HTMLInputElement).select()}
+          />
+          <button
+            className="btn-secondary text-xs px-4"
+            onClick={handleCopy}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+      )}
     </GlassCard>
   );
 }

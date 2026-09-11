@@ -44,9 +44,11 @@ export async function POST(request: NextRequest) {
     const questionsRaw = await generateCompletion(
       "You are an expert technical interviewer. Return ONLY a valid JSON array. No markdown, no explanation, no thinking, no reasoning — just the raw JSON array.",
       questionPrompt,
-      4096,
+      16384,
       0.7
     );
+
+    console.log("[Questions] Raw length:", questionsRaw.length);
 
     const jsonStr = extractJSON(questionsRaw);
     let questions: InterviewQuestion[];
@@ -54,15 +56,18 @@ export async function POST(request: NextRequest) {
       const parsed = JSON.parse(jsonStr);
       questions = Array.isArray(parsed) ? parsed : Array.isArray(parsed.questions) ? parsed.questions : [];
     } catch (e) {
-      console.error("Questions parse error:", e);
+      console.error("[Questions] Parse error:", e);
+      console.error("[Questions] Extracted:", jsonStr.slice(0, 300));
       questions = [];
     }
+
+    console.log("[Questions] Generated:", questions.length);
 
     const weaknessPrompt = buildWeaknessAnalysisPrompt(profile, repos);
     const analysisRaw = await generateCompletion(
       "You are a code quality analyst. Return ONLY a valid JSON object. No markdown, no explanation, no thinking — just the raw JSON.",
       weaknessPrompt,
-      2048,
+      8192,
       0.3
     );
 
