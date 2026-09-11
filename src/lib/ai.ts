@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const BASE_URL = "https://openrouter.ai/api/v1";
-const MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+const MODEL = "inclusionai/ling-3.0-flash-sante:free";
 
 let client: OpenAI | null = null;
 
@@ -70,10 +70,17 @@ export function extractJSON(raw: string): string {
   return open === "[" ? "[]" : "{}";
 }
 
+function extractContent(response: { choices: { message: { content: string | null; reasoning?: string | null } }[] }): string {
+  const msg = response.choices[0]?.message;
+  if (msg?.content) return msg.content;
+  if (msg?.reasoning) return msg.reasoning;
+  return "";
+}
+
 export async function generateCompletion(
   systemPrompt: string,
   userPrompt: string,
-  maxTokens = 16384,
+  maxTokens = 4096,
   temperature = 0.7
 ): Promise<string> {
   const openai = getClient();
@@ -86,12 +93,12 @@ export async function generateCompletion(
     max_tokens: maxTokens,
     temperature,
   });
-  return response.choices[0]?.message?.content || "";
+  return extractContent(response);
 }
 
 export async function chatCompletion(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
-  maxTokens = 8192,
+  maxTokens = 4096,
   temperature = 0.7
 ): Promise<string> {
   const openai = getClient();
@@ -101,5 +108,5 @@ export async function chatCompletion(
     max_tokens: maxTokens,
     temperature,
   });
-  return response.choices[0]?.message?.content || "";
+  return extractContent(response);
 }

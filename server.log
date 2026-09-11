@@ -1,0 +1,16 @@
+
+> repo-interview-ai@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.29.241:3000
+- Environments: .env.local
+✓ Ready in 602ms
+✓ Running next.config.ts took 42ms
+
+[Questions] Raw length: 7398
+[Questions] Raw first 500: [{"id":"q1","category":"project-deep-dive","question":"Walk me through the architecture of your repository 'test/r'. What problem does it solve and why did you choose this particular stack for a fullstack role?","modelAnswer":"The repository implements a fullstack solution for [specific domain]. I chose the current stack because it balances developer velocity with production readiness. The architecture follows a modular monolith approach with clear separation between API and frontend layers, all
+[Questions] Extracted first 500: [{"id":"q1","category":"project-deep-dive","question":"Walk me through the architecture of your repository 'test/r'. What problem does it solve and why did you choose this particular stack for a fullstack role?","modelAnswer":"The repository implements a fullstack solution for [specific domain]. I chose the current stack because it balances developer velocity with production readiness. The architecture follows a modular monolith approach with clear separation between API and frontend layers, all
+[Questions] Generated: 10
+ POST /api/questions 200 in 16.0s (next.js: 320ms, application-code: 15.7s)
