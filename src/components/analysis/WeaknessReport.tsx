@@ -1,163 +1,108 @@
 "use client";
 
-import { useMemo } from "react";
 import { motion } from "framer-motion";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-} from "recharts";
 import { useStore } from "@/store/useStore";
-import GlassCard from "@/components/ui/GlassCard";
 
 export default function WeaknessReport() {
-  const { weaknesses, strengths, repos } = useStore();
-
-  const chartData = useMemo(() => {
-    if (!repos.length) return [];
-    const categories = [
-      { label: "Documentation", key: "docs" },
-      { label: "Testing", key: "tests" },
-      { label: "Activity", key: "activity" },
-      { label: "Complexity", key: "complexity" },
-      { label: "Languages", key: "languages" },
-      { label: "Community", key: "community" },
-    ];
-    return categories.map((cat) => {
-      let score = 50;
-      switch (cat.key) {
-        case "docs":
-          score = repos.reduce((acc, r) => acc + ((r.readme?.length || 0) > 500 ? 1 : 0), 0) / repos.length * 100;
-          break;
-        case "tests":
-          score = repos.reduce((acc, r) => acc + (r.files.some((f) => f.path.includes("test") || f.path.includes("spec") || f.path.includes("__tests__")) ? 1 : 0), 0) / repos.length * 100;
-          break;
-        case "activity":
-          score = repos.reduce((acc, r) => acc + r.commits.length, 0) / (repos.length * 20) * 100;
-          break;
-        case "complexity":
-          score = repos.reduce((acc, r) => acc + r.files.length, 0) / (repos.length * 20) * 100;
-          break;
-        case "languages":
-          score = repos.reduce((acc, r) => acc + Object.keys(r.languages).length, 0) / (repos.length * 3) * 100;
-          break;
-        case "community":
-          score = repos.reduce((acc, r) => acc + r.stargazers_count + r.forks_count, 0) / (repos.length * 10) * 100;
-          break;
-      }
-      return { category: cat.label, score: Math.min(100, Math.round(score)) };
-    });
-  }, [repos]);
+  const { weaknesses, strengths } = useStore();
+  if (!weaknesses.length && !strengths.length) return null;
 
   return (
-    <div className="space-y-6">
-      <h3
-        className="text-sm font-bold uppercase tracking-widest"
-        style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-secondary)" }}
-      >
-        Analysis Report
-      </h3>
-
-      {chartData.length > 0 && (
-        <GlassCard className="p-6" delay={0}>
-          <h4
-            className="text-sm font-semibold mb-4"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
-          >
-            Portfolio Radar
-          </h4>
-          <div className="radar-container" style={{ height: 300 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={chartData}>
-                <PolarGrid stroke="rgba(57, 255, 20, 0.06)" />
-                <PolarAngleAxis
-                  dataKey="category"
-                  tick={{ fill: "#7a9a7a", fontSize: 11, fontFamily: "Space Grotesk" }}
-                />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: "#7a9a7a", fontSize: 10 }} />
-                <Radar
-                  name="Score"
-                  dataKey="score"
-                  stroke="#39FF14"
-                  fill="#39FF14"
-                  fillOpacity={0.15}
-                  strokeWidth={2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </GlassCard>
-      )}
-
+    <div className="space-y-10">
       {strengths.length > 0 && (
-        <GlassCard className="p-6" delay={0.1}>
-          <h4
-            className="text-sm font-semibold mb-3 flex items-center gap-2"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
-          >
-            <span style={{ color: "var(--accent-green)" }}>&#10003;</span> Strengths
-          </h4>
-          <div className="space-y-2">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(57,255,20,0.1)", border: "1px solid rgba(57,255,20,0.15)" }}>
+              <span style={{ color: "var(--accent-green)", fontSize: "14px" }}>&#10003;</span>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-green)" }}>
+                Strengths
+              </h3>
+              <p className="text-xs" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>
+                {strengths.length} areas where you excel
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {strengths.map((s, i) => (
               <motion.div
-                key={i}
-                className="flex items-start gap-3 p-3 rounded-xl"
-                style={{ background: "rgba(57, 255, 20, 0.03)", border: "1px solid rgba(57, 255, 20, 0.08)" }}
+                key={s.repo + s.message}
+                className="glass-card depth-hover p-5"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: i * 0.08 }}
               >
-                <span className="badge badge-success text-[10px] mt-0.5">{s.category}</span>
-                <div>
-                  <p className="text-xs font-semibold">{s.repo}</p>
-                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{s.message}</p>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full mt-2 shrink-0" style={{ background: "var(--accent-green)", boxShadow: "0 0 8px rgba(57,255,20,0.4)" }} />
+                  <div className="flex-1">
+                    <p className="text-sm leading-relaxed mb-2" style={{ fontWeight: 400, color: "var(--text-primary)" }}>
+                      {s.message}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="badge badge-green text-[10px]">{s.repo}</span>
+                      <span className="text-[10px]" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>{s.category}</span>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
-        </GlassCard>
+        </motion.section>
       )}
 
       {weaknesses.length > 0 && (
-        <GlassCard className="p-6" delay={0.2}>
-          <h4
-            className="text-sm font-semibold mb-3 flex items-center gap-2"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
-          >
-            <span style={{ color: "var(--error)" }}>&#9888;</span> Weaknesses
-          </h4>
-          <div className="space-y-3">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.15)" }}>
+              <span style={{ color: "var(--warning)", fontSize: "14px" }}>&#9888;</span>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "var(--warning)" }}>
+                Areas to Improve
+              </h3>
+              <p className="text-xs" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>
+                {weaknesses.length} repositories need attention
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
             {weaknesses.map((w, i) => (
               <motion.div
-                key={i}
-                className="p-3 rounded-xl"
-                style={{ background: "rgba(255, 61, 61, 0.02)", border: "1px solid rgba(255, 61, 61, 0.08)" }}
+                key={w.repo + w.issues.map((iss) => iss.message).join(",")}
+                className="glass-card depth-hover p-6"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
+                transition={{ delay: i * 0.08 }}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold">{w.repo}</p>
-                  <span
-                    className="text-xs font-bold"
-                    style={{ fontFamily: "'Space Grotesk', monospace", color: w.score > 60 ? "var(--accent-green)" : w.score > 30 ? "var(--warning)" : "var(--error)" }}
-                  >
-                    {w.score}/100
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "var(--warning)", boxShadow: "0 0 8px rgba(251,191,36,0.4)" }} />
+                  <h4 className="text-sm font-semibold" style={{ fontFamily: "'Syne', sans-serif" }}>{w.repo}</h4>
+                  <span className="text-[10px] ml-auto" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>
+                    Score: {w.score}/100
                   </span>
                 </div>
-                <div className="space-y-1">
+
+                <div className="space-y-2.5">
                   {w.issues.map((issue, j) => (
-                    <div key={j} className="flex items-start gap-2">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0"
-                        style={{
-                          background: issue.severity === "high" ? "var(--error)" : issue.severity === "medium" ? "var(--warning)" : "var(--text-secondary)",
-                        }}
-                      />
-                      <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                    <div key={j} className="flex items-start gap-3 pl-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium mt-0.5 shrink-0 ${
+                        issue.severity === "high" ? "badge-error" :
+                        issue.severity === "medium" ? "badge-warning" : "badge-blue"
+                      }`}>
+                        {issue.severity}
+                      </span>
+                      <p className="text-sm leading-relaxed" style={{ fontWeight: 300, color: "var(--text-primary)" }}>
                         {issue.message}
                       </p>
                     </div>
@@ -166,7 +111,7 @@ export default function WeaknessReport() {
               </motion.div>
             ))}
           </div>
-        </GlassCard>
+        </motion.section>
       )}
     </div>
   );

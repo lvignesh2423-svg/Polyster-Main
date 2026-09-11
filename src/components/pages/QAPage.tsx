@@ -6,58 +6,33 @@ import { useStore } from "@/store/useStore";
 import type { ChatMessage } from "@/lib/types";
 
 export default function QAPage() {
-  const { chatHistory, addChatMessage, profile, repos, isLoading, setIsLoading, setView } =
-    useStore();
+  const { setView, questions, repos, profile } = useStore();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatHistory]);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
-
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input.trim(),
-      timestamp: Date.now(),
-    };
-    addChatMessage(userMsg);
+    const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: input.trim(), timestamp: Date.now() };
+    const allMessages = [...messages, userMsg];
+    setMessages(allMessages);
     setInput("");
     setIsLoading(true);
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          profile,
-          repos,
-          messages: [...chatHistory, userMsg],
-          mode: "qa",
-        }),
+        body: JSON.stringify({ profile, repos, messages: allMessages.map((m) => ({ id: m.id, role: m.role, content: m.content, timestamp: m.timestamp })) }),
       });
-
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
-
-      const aiMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: data.response,
-        timestamp: Date.now(),
-      };
-      addChatMessage(aiMsg);
-    } catch (err) {
-      const errMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: `Error: ${err instanceof Error ? err.message : "Something went wrong"}`,
-        timestamp: Date.now(),
-      };
-      addChatMessage(errMsg);
+      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: data.response || data.error || "No response", timestamp: Date.now() }]);
+    } catch {
+      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: "assistant", content: "Network error.", timestamp: Date.now() }]);
     } finally {
       setIsLoading(false);
     }
@@ -65,101 +40,47 @@ export default function QAPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-base)" }}>
-      <motion.header
-        className="sticky top-0 z-30 backdrop-blur-xl border-b"
-        style={{ background: "rgba(5, 5, 8, 0.85)", borderColor: "rgba(57, 255, 20, 0.08)" }}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              className="btn-secondary text-xs px-3 py-1.5"
-              onClick={() => setView("dashboard")}
-            >
-              &#8592; Back
-            </button>
-            <h1
-              className="text-lg font-bold"
-              style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-green)" }}
-            >
-              Q&A Console
-            </h1>
-          </div>
-          <span className="badge badge-green text-[10px]">
-            {chatHistory.length} Messages
-          </span>
+      <header className="sticky top-0 z-30" style={{ background: "rgba(15, 23, 42, 0.7)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+          <button className="btn-secondary text-sm px-4 py-2" onClick={() => setView("dashboard")}>&larr; Back</button>
+          <h2 className="text-base font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-blue)" }}>Q&A Console</h2>
+          <div />
         </div>
-      </motion.header>
+      </header>
 
-      <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {chatHistory.length === 0 && (
-            <motion.div
-              className="text-center py-20"
-              style={{ color: "var(--text-secondary)" }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="text-5xl mb-4">&#129302;</div>
-              <p className="text-base mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
-                Ask anything about your GitHub portfolio
-              </p>
-              <p className="text-sm">
-                e.g., &quot;Which repo should I emphasize in an interview?&quot;
-              </p>
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-6">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-6">
+          {messages.length === 0 && (
+            <motion.div className="flex flex-col items-center justify-center h-full text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <p className="text-base mb-6" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>Ask anything about your code or repos</p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-lg">
+                {["What are my weakest areas?", "How can I improve?", "What questions should I expect?", "Explain my architecture"].map((p) => (
+                  <button key={p} className="btn-secondary text-sm px-4 py-2" onClick={() => setInput(p)}>{p}</button>
+                ))}
+              </div>
             </motion.div>
           )}
-
-          {chatHistory.map((msg) => (
-            <motion.div
-              key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
+          {messages.map((msg) => (
+            <motion.div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
               <div className={msg.role === "user" ? "chat-bubble-user" : "chat-bubble-ai"}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ fontWeight: 300 }}>{msg.content}</p>
               </div>
             </motion.div>
           ))}
-
           {isLoading && (
-            <div className="flex justify-start">
+            <motion.div className="flex justify-start" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="chat-bubble-ai">
-                <div className="flex gap-1.5">
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--accent-green)", animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--accent-green)", animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--accent-green)", animationDelay: "300ms" }} />
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "var(--accent-blue)", animation: "pulse 1s infinite" }} />
+                  <span className="text-sm" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>Thinking...</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-
-          <div ref={bottomRef} />
         </div>
-
-        <div className="p-4 border-t" style={{ borderColor: "rgba(57, 255, 20, 0.06)" }}>
-          <div className="flex gap-3 max-w-4xl mx-auto">
-            <input
-              type="text"
-              placeholder="Ask about your repos..."
-              className="neon-input flex-1 text-sm"
-              style={{ borderRadius: "12px", padding: "14px 18px" }}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            />
-            <motion.button
-              className="btn-primary text-sm px-6"
-              style={{ borderRadius: "12px", padding: "14px 22px" }}
-              whileTap={{ scale: 0.95 }}
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-            >
-              Send
-            </motion.button>
-          </div>
+        <div className="flex gap-3">
+          <input type="text" className="neon-input flex-1 text-base" placeholder="Ask about your repos..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} disabled={isLoading} />
+          <motion.button className="btn-primary px-6 py-3" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={sendMessage} disabled={isLoading || !input.trim()}>Send</motion.button>
         </div>
       </div>
     </div>
