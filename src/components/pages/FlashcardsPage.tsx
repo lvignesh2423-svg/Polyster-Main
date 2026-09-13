@@ -20,7 +20,7 @@ export default function FlashcardsPage() {
 
   if (!flashcards.length) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "transparent" }}>
         <p className="text-base mb-6" style={{ color: "var(--text-secondary)", fontWeight: 300 }}>No flashcards yet</p>
         <button className="btn-secondary text-sm px-6 py-3" onClick={() => setView("dashboard")}>Back to Dashboard</button>
       </div>
@@ -28,8 +28,8 @@ export default function FlashcardsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--bg-base)" }}>
-      <header className="sticky top-0 z-30" style={{ background: "rgba(15, 23, 42, 0.7)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "transparent" }}>
+      <header className="sticky top-0 z-30" style={{ background: "rgba(10, 10, 10, 0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <button className="btn-secondary text-sm px-4 py-2" onClick={() => setView("dashboard")}>&larr; Back</button>
           <h2 className="text-base font-semibold" style={{ fontFamily: "'Syne', sans-serif", color: "var(--accent-cyan)" }}>Flashcards</h2>

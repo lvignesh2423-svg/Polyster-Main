@@ -346,9 +346,9 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(220, 38, 38, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse at 20% 80%, rgba(185, 28, 28, 0.02) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.015) 0%, transparent 50%);
+    radial-gradient(ellipse at 50% 50%, rgba(220, 38, 38, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 80%, rgba(185, 28, 28, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
 }
 
 /* ========= SPATIAL SCENE ========= */

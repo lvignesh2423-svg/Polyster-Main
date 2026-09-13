@@ -52,19 +52,26 @@ export default function HeroSection() {
       setRepos(data.repos);
       setLoadingMessage("Generating interview questions...");
 
-      const qRes = await fetch("/api/questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile: data.profile, repos: data.repos, difficulty, role, companyStyle }),
-      });
-      const qData = await qRes.json();
-      if (qData.error) throw new Error(qData.error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let qData: any = {};
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const qRes = await fetch("/api/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile: data.profile, repos: data.repos, difficulty, role, companyStyle }),
+        });
+        qData = await qRes.json();
+        if (qData.error) throw new Error(qData.error);
+        if (qData.questions && qData.questions.length > 0) break;
+        if (attempt === 0) setLoadingMessage("Retrying question generation...");
+      }
 
-      useStore.getState().setQuestions(qData.questions || []);
+      const questions = qData.questions || [];
+      useStore.getState().setQuestions(questions);
       useStore.getState().setWeaknesses(qData.weaknesses || []);
       useStore.getState().setStrengths(qData.strengths || []);
 
-      const flashcards = (qData.questions || []).map(
+      const flashcards = questions.map(
         (q: { id: string; question: string; modelAnswer: string; relatedRepo: string }) => ({
           id: q.id, front: q.question, back: q.modelAnswer, repo: q.relatedRepo,
         })
@@ -114,7 +121,7 @@ export default function HeroSection() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          <span className="badge badge-blue text-[10px] glow-pulse">AI-Powered Interview Prep</span>
+          <span className="badge badge-red text-[10px] glow-pulse">AI-Powered Interview Prep</span>
         </motion.div>
 
         <h1
@@ -126,8 +133,8 @@ export default function HeroSection() {
             transform: `translate(${mousePos.x * 3}px, ${mousePos.y * 3}px)`,
           }}
         >
-          <span style={{ color: "var(--accent-blue)" }}>Repo</span>
-          <span style={{ color: "var(--accent-cyan)" }}>Interview</span>
+          <span style={{ color: "var(--accent-red-bright)", textShadow: "0 0 20px rgba(220, 38, 38, 0.4)" }}>Repo</span>
+          <span style={{ color: "var(--accent-blue)" }}>Interview</span>
           <span className="ml-2 text-lg md:text-xl font-light align-middle" style={{ color: "var(--text-secondary)" }}>
             AI
           </span>
@@ -179,7 +186,7 @@ export default function HeroSection() {
               >
                 <div
                   className="w-1 h-1 rounded-full"
-                  style={{ background: "var(--accent-blue)", boxShadow: "0 0 6px rgba(59, 130, 246, 0.5)" }}
+                  style={{ background: "var(--accent-red-bright)", boxShadow: "0 0 6px rgba(220, 38, 38, 0.5)" }}
                 />
                 {feat}
               </motion.div>

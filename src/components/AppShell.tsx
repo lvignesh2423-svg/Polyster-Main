@@ -99,21 +99,23 @@ export default function AppShell() {
   const { view } = useStore();
 
   return (
-    <div className="relative min-h-screen spatial-scene" style={{ background: "var(--bg-base)" }}>
-      <SpiderWebBackground />
-      <div className="web-overlay" />
-      <AnimatedOrbs />
-      <FloatingParticles />
-      <FloatingShapes />
-      <div className="relative z-10">
-        {view === "hero" && <HeroSection />}
-        {view === "analyzing" && <AnalyzingState />}
-        {view === "dashboard" && <Dashboard />}
-        {view === "qa" && <QAPage />}
-        {view === "flashcards" && <FlashcardsPage />}
-        {view === "mock" && <MockPage />}
+    <>
+      <div className="relative min-h-screen spatial-scene" style={{ background: "#050505" }}>
+        <SpiderWebBackground />
+        <div className="web-overlay" />
+        <AnimatedOrbs />
+        <FloatingParticles />
+        <FloatingShapes />
+        <div className="relative z-10">
+          {view === "hero" && <HeroSection />}
+          {view === "analyzing" && <AnalyzingState />}
+          {view === "dashboard" && <Dashboard />}
+          {view === "qa" && <QAPage />}
+          {view === "flashcards" && <FlashcardsPage />}
+          {view === "mock" && <MockPage />}
+        </div>
       </div>
       <SettingsPanel />
-    </div>
+    </>
   );
 }
