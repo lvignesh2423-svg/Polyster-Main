@@ -8,7 +8,7 @@ import WeaknessReport from "@/components/analysis/WeaknessReport";
 import ExportSection from "@/components/export/ExportSection";
 
 const NAV_CARDS = [
-  { id: "qa" as const, label: "Q&A Console", desc: "Ask anything about your repos", icon: "\u{1F4AC}", color: "var(--accent-blue)" },
+  { id: "qa" as const, label: "Q&A Console", desc: "Ask anything about your repos", icon: "\u{1F4AC}", color: "var(--accent-red-bright)" },
   { id: "mock" as const, label: "Mock Interview", desc: "10-question timed mock session", icon: "\u{1F3AB}", color: "var(--accent-teal)" },
   { id: "flashcards" as const, label: "Flashcards", desc: "Flip-card study mode", icon: "\u{1F4A7}", color: "var(--accent-cyan)" },
 ];
@@ -37,8 +37,8 @@ export default function Dashboard() {
                 style={{ fontFamily: "'Syne', sans-serif", letterSpacing: "-0.01em" }}
                 onClick={() => { reset(); setView("hero"); }}
               >
-                <span style={{ color: "var(--accent-blue)" }}>Repo</span>
-                <span style={{ color: "var(--accent-cyan)" }}>Interview</span>
+                <span style={{ color: "var(--accent-red-bright)" }}>Repo</span>
+                <span style={{ color: "var(--accent-blue)" }}>Interview</span>
                 <span className="ml-2 text-sm font-light" style={{ color: "var(--text-secondary)" }}>AI</span>
               </h1>
             </div>
