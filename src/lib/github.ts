@@ -106,6 +106,44 @@ export async function fetchRepoFiles(
   return files;
 }
 
+async function fetchFileContent(
+  fullName: string,
+  filePath: string,
+  token?: string
+): Promise<string> {
+  try {
+    const res = await fetch(
+      `${GITHUB_API}/repos/${fullName}/contents/${filePath}`,
+      { headers: headers(token) }
+    );
+    if (!res.ok) return "";
+    const data = await res.json();
+    if (data.content) {
+      return Buffer.from(data.content, "base64").toString("utf-8").slice(0, 4000);
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+const SOURCE_EXTENSIONS = [
+  ".ts", ".tsx", ".js", ".jsx", ".py", ".rb", ".go", ".rs",
+  ".java", ".kt", ".swift", ".c", ".cpp", ".cs", ".php",
+  ".vue", ".svelte", ".html", ".css", ".scss",
+];
+
+const KEY_FILES = [
+  "README.md", "readme.md",
+  "package.json", "Cargo.toml", "go.mod", "requirements.txt", "Gemfile",
+  "Dockerfile", "docker-compose.yml",
+];
+
+function isSourceFile(name: string): boolean {
+  const lower = name.toLowerCase();
+  return SOURCE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
 export async function fetchReadme(
   fullName: string,
   token?: string
@@ -133,6 +171,34 @@ export async function fetchCommits(
   );
   if (!res.ok) return [];
   return res.json();
+}
+
+export async function fetchRepoContents(
+  fullName: string,
+  files: RepoFile[],
+  token?: string
+): Promise<{ path: string; content: string }[]> {
+  const contents: { path: string; content: string }[] = [];
+
+  const keyToFetch = files.filter((f) => KEY_FILES.includes(f.name)).slice(0, 2);
+  const sourceToFetch = files
+    .filter((f) => isSourceFile(f.name) && !KEY_FILES.includes(f.name))
+    .sort((a, b) => a.size - b.size)
+    .slice(0, 4);
+
+  const toFetch = [...keyToFetch, ...sourceToFetch];
+
+  const results = await Promise.all(
+    toFetch.map((f) => fetchFileContent(fullName, f.path, token))
+  );
+
+  for (let i = 0; i < toFetch.length; i++) {
+    if (results[i]) {
+      contents.push({ path: toFetch[i].path, content: results[i] });
+    }
+  }
+
+  return contents;
 }
 
 export function rankRepos(repos: EnrichedRepo[]): EnrichedRepo[] {

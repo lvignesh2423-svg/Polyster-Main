@@ -21,6 +21,42 @@ function getClient(): OpenAI {
   return client;
 }
 
+export function stripMarkdown(text: string): string {
+  let s = text;
+  s = s.replace(/<think>[\s\S]*?<\/think>/gi, "");
+  s = s.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, "");
+  s = s.replace(/^#{1,6}\s+/gm, "");
+  s = s.replace(/\*\*([^*]+)\*\*/g, "$1");
+  s = s.replace(/\*([^*]+)\*/g, "$1");
+  s = s.replace(/__([^_]+)__/g, "$1");
+  s = s.replace(/_([^_]+)_/g, "$1");
+  s = s.replace(/~~([^~]+)~~/g, "$1");
+  s = s.replace(/`([^`]+)`/g, "$1");
+  s = s.replace(/```[\s\S]*?```/g, "");
+  s = s.replace(/^\s*[-*+]\s+/gm, "");
+  s = s.replace(/^\s*\d+\.\s+/gm, "");
+  s = s.replace(/^\s*>\s+/gm, "");
+  s = s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  s = s.replace(/!\[([^\]]*)\]\([^)]+\)/g, "");
+  s = s.replace(/---+/g, "");
+  s = s.replace(/\|[^|]+\|/g, "");
+  s = s.replace(/^\s*[-=]{3,}\s*$/gm, "");
+  const lines = s.split("\n");
+  const cleaned: string[] = [];
+  let prevEmpty = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed === "") {
+      if (!prevEmpty) cleaned.push("");
+      prevEmpty = true;
+    } else {
+      cleaned.push(trimmed);
+      prevEmpty = false;
+    }
+  }
+  return cleaned.join("\n").trim();
+}
+
 export function extractJSON(raw: string): string {
   let cleaned = raw
     .replace(/```json\n?/g, "")

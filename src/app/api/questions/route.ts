@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { generateCompletion, extractJSON } from "@/lib/ai";
+import { generateCompletion, extractJSON, stripMarkdown } from "@/lib/ai";
 import {
   buildQuestionGenerationPrompt,
   buildWeaknessAnalysisPrompt,
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const questionsRaw = await generateCompletion(
       "You are an expert technical interviewer. Return ONLY a valid JSON array. No markdown, no explanation, no thinking, no reasoning — just the raw JSON array.",
       questionPrompt,
-      4096,
+      8192,
       0.7
     );
 
@@ -57,11 +57,18 @@ export async function POST(request: NextRequest) {
       questions = [];
     }
 
+    questions = questions.map((q) => ({
+      ...q,
+      modelAnswer: stripMarkdown(q.modelAnswer || ""),
+      question: stripMarkdown(q.question || ""),
+      followUp: stripMarkdown(q.followUp || ""),
+    }));
+
     const weaknessPrompt = buildWeaknessAnalysisPrompt(profile, repos);
     const analysisRaw = await generateCompletion(
       "You are a code quality analyst. Return ONLY a valid JSON object. No markdown, no explanation, no thinking — just the raw JSON.",
       weaknessPrompt,
-      2048,
+      4096,
       0.3
     );
 

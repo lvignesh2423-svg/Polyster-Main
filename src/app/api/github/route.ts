@@ -6,6 +6,7 @@ import {
   fetchRepoFiles,
   fetchReadme,
   fetchCommits,
+  fetchRepoContents,
   rankRepos,
   analyzeWeaknesses,
 } from "@/lib/github";
@@ -34,12 +35,14 @@ export async function POST(request: NextRequest) {
         fetchReadme(repo.full_name, token),
         fetchCommits(repo.full_name, token, 10),
       ]);
+      const fileContents = await fetchRepoContents(repo.full_name, files, token);
       const enriched: EnrichedRepo = {
         ...repo,
         languages,
         files: files.slice(0, 15),
         readme,
         commits,
+        fileContents,
         interviewRelevance: 0,
         weaknessFlags: [],
         strengths: [],

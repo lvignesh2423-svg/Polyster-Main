@@ -40,6 +40,7 @@ export interface RepoFile {
   path: string;
   type: string;
   size: number;
+  content?: string;
 }
 
 export interface RepoCommit {
@@ -58,6 +59,7 @@ export interface EnrichedRepo extends GitHubRepo {
   interviewRelevance: number;
   weaknessFlags: string[];
   strengths: string[];
+  fileContents?: { path: string; content: string }[];
 }
 
 export interface InterviewQuestion {

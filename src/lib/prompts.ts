@@ -4,7 +4,6 @@ import type {
   CompanyStyle,
   EnrichedRepo,
   GitHubProfile,
-  QuestionCategory,
 } from "./types";
 
 const DIFFERENCE_INSTRUCTIONS: Record<Difficulty, string> = {
@@ -30,6 +29,30 @@ const COMPANY_INSTRUCTIONS: Record<CompanyStyle, string> = {
   enterprise: "Focus on compliance, maintainability, documentation, long-term architecture, and stakeholder communication.",
 };
 
+function buildRepoContext(repos: EnrichedRepo[]): string {
+  return repos
+    .map((r) => {
+      const readmeSnippet = r.readme
+        ? r.readme.slice(0, 800).replace(/\n{3,}/g, "\n\n")
+        : "No README";
+      const fileSnippets = (r.fileContents || [])
+        .map((fc) => `--- ${fc.path} ---\n${fc.content.slice(0, 1500)}`)
+        .join("\n\n");
+      const fileList = r.files.slice(0, 10).map((f) => f.path).join(", ");
+      const commitMsgs = r.commits.slice(0, 5).map((c) => c.commit.message).join("; ");
+
+      return `REPOSITORY: ${r.full_name}
+Languages: ${Object.keys(r.languages).join(", ")}
+Stars: ${r.stargazers_count} | Forks: ${r.forks_count}
+Files: ${fileList}
+Recent commits: ${commitMsgs}
+README (first 800 chars):
+${readmeSnippet}
+${fileSnippets ? "\nSource code snippets:\n" + fileSnippets : ""}`;
+    })
+    .join("\n\n");
+}
+
 export function buildQuestionGenerationPrompt(
   profile: GitHubProfile,
   repos: EnrichedRepo[],
@@ -37,72 +60,121 @@ export function buildQuestionGenerationPrompt(
   role: RoleTarget,
   companyStyle: CompanyStyle
 ): string {
-  const reposSummary = repos
-    .map(
-      (r) => `
-${r.full_name}: ${Object.keys(r.languages).join(", ")} | ⭐${r.stargazers_count} | Files: ${r.files.slice(0, 8).map((f) => f.path).join(", ")} | Weakness: ${r.weaknessFlags.slice(0, 2).join("; ") || "none"}`
-    )
-    .join("\n");
+  const repoContext = buildRepoContext(repos);
 
-  return `Analyze GitHub portfolio and generate 10 interview questions.
+  return `You are an expert technical interviewer. Analyze this developer's GitHub portfolio including their actual code, README files, and commit history. Generate 10 interview questions that are deeply specific to their actual projects.
 
-Developer: ${profile.login} (${profile.name || "N/A"}) — ${profile.bio || "N/A"} — ${profile.public_repos} repos
-Config: difficulty=${difficulty} role=${role} company=${companyStyle}
+Developer: ${profile.login} (${profile.name || "N/A"})
+Bio: ${profile.bio || "N/A"}
+Public repos: ${profile.public_repos}
 
-Repos:
-${reposSummary}
+Difficulty: ${difficulty} — ${DIFFERENCE_INSTRUCTIONS[difficulty]}
+Role focus: ${role} — ${ROLE_INSTRUCTIONS[role]}
+Company style: ${companyStyle} — ${COMPANY_INSTRUCTIONS[companyStyle]}
 
-Each question: {"id":"unique","category":"cat","question":"text","modelAnswer":"2-3 paragraphs","keyPoints":["p1","p2","p3"],"commonMistakes":["m1","m2"],"followUp":"text","relatedRepo":"name","relatedFile":"path"}
+REPOSITORIES WITH CODE AND DOCUMENTATION:
+${repoContext}
 
-Categories: project-deep-dive, technical-decisions, code-specific, problem-solving, behavioral, gaps-red-flags, trending
+REQUIREMENTS FOR QUESTIONS:
+- Each question MUST reference specific code, files, or patterns from their actual repositories
+- Questions should require the developer to explain THEIR OWN code decisions
+- Include questions about: architecture choices, specific algorithms, code patterns, bug fixes, performance decisions
+- Questions must feel like a real interview, not generic quiz questions
+- Reference specific file paths and function names from their code
 
-Return ONLY valid JSON array, no markdown.`;
+Return a JSON array of exactly 10 objects. Each object:
+{
+  "id": "q1",
+  "category": "one of: project-deep-dive, technical-decisions, code-specific, problem-solving, debugging-scenarios, behavioral, gaps-red-flags, trending-modern",
+  "question": "A specific question about their actual code or project",
+  "modelAnswer": "A 2-3 sentence ideal answer referencing the code",
+  "keyPoints": ["point1", "point2", "point3"],
+  "commonMistakes": ["mistake1", "mistake2"],
+  "followUp": "A follow-up question to dig deeper",
+  "relatedRepo": "repo name",
+  "relatedFile": "path/to/file.ext"
+}
+
+Return ONLY the JSON array. No markdown, no explanation, no code fences.`;
 }
 
 export function buildChatSystemPrompt(
   profile: GitHubProfile,
   repos: EnrichedRepo[]
 ): string {
-  const reposContext = repos
-    .map(
-      (r) =>
-        `${r.full_name}: [${Object.keys(r.languages).join(", ")}] ⭐${r.stargazers_count}`
-    )
-    .join("\n");
+  const repoContext = buildRepoContext(repos);
 
-  return `You are RepoInterview AI, an expert interviewer analyzing ${profile.login}'s GitHub (${profile.bio || "N/A"}, ${profile.public_repos} repos).
+  return `You are RepoInterview AI, an expert technical interviewer. You have full access to ${profile.login}'s GitHub portfolio including their actual source code, README files, and commit history.
 
-Repos:
-${reposContext}
+Developer: ${profile.login} (${profile.name || "N/A"})
+Bio: ${profile.bio || "N/A"}
+Public repos: ${profile.public_repos}
 
-Answer questions about this developer's portfolio with specific references to repos and files. Be concise and helpful. If you don't know, say so.`;
+REPOSITORIES WITH CODE AND DOCUMENTATION:
+${repoContext}
+
+CRITICAL RULES:
+- Answer in plain text only. NEVER use markdown formatting. No asterisks, no hashtags, no bullet symbols, no code fences.
+- Write in clean, natural paragraphs.
+- Reference specific files, functions, and code patterns from their actual repositories.
+- If asked about their code, explain what you see in the actual source files.
+- If asked interview questions, tailor them to the specific code patterns you see.
+- Be conversational and professional, like a real interviewer.`;
+}
+
+export function buildMockInterviewPrompt(
+  profile: GitHubProfile,
+  repos: EnrichedRepo[],
+  difficulty: Difficulty
+): string {
+  const repoContext = buildRepoContext(repos);
+
+  return `You are a senior technical interviewer conducting a MOCK INTERVIEW with ${profile.login}.
+
+Developer: ${profile.login} (${profile.name || "N/A"})
+Bio: ${profile.bio || "N/A"}
+Difficulty level: ${difficulty}
+
+REPOSITORIES WITH CODE AND DOCUMENTATION:
+${repoContext}
+
+INTERVIEW RULES:
+- Ask ONE question at a time based on their ACTUAL code and projects
+- Reference specific files, functions, and patterns from their repositories
+- After each answer, give brief feedback (2-3 sentences) then ask the next question
+- Questions should cover: code architecture, specific algorithms, design decisions, debugging scenarios
+- Make it feel like a real FAANG/tech company interview
+- After 10 questions, provide a final score and summary
+
+CRITICAL FORMATTING RULES:
+- Answer in plain text ONLY. NEVER use asterisks, hashtags, markdown, or code fences.
+- Write in clean, natural paragraphs like a real person talking.
+- No bold, no italic, no bullet points with symbols.
+- Just plain conversational English.`;
 }
 
 export function buildWeaknessAnalysisPrompt(
   profile: GitHubProfile,
   repos: EnrichedRepo[]
 ): string {
-  const reposSummary = repos
-    .map(
-      (r) => `
-${r.full_name}: langs=[${Object.keys(r.languages).join(",")}] stars=${r.stargazers_count} forks=${r.forks_count}
-  readme_chars=${r.readme?.length || 0} commits=${r.commits.length} files=${r.files.length}
-  topics=[${r.topics.join(",")}] license=${r.license?.name || "none"} fork=${r.fork}
-  pushed=${r.pushed_at} created=${r.created_at}
-  weakness_flags=[${r.weaknessFlags.join(",")}]`
-    )
-    .join("\n");
+  const repoContext = buildRepoContext(repos);
 
-  return `Analyze this developer's GitHub and identify weaknesses and strengths.
+  return `Analyze this developer's GitHub portfolio including their actual code quality, README documentation, and commit patterns.
 
-Profile: ${profile.login} - ${profile.bio || "N/A"} - ${profile.public_repos} repos
+Developer: ${profile.login} — ${profile.bio || "N/A"} — ${profile.public_repos} repos
 
-Repos:
-${reposSummary}
+REPOSITORIES WITH CODE AND DOCUMENTATION:
+${repoContext}
 
-Return JSON: {"weaknesses":[{"repo":"name","issues":[{"severity":"high|medium|low","message":"desc"}],"score":0-100}],"strengths":[{"repo":"name","message":"desc","category":"cat"}]}
+Score each repository 0-100 based on:
+- Code quality and patterns visible in source files
+- Documentation completeness (README)
+- Commit history and development activity
+- Project structure and organization
 
-Score 0-100 per repo. Return ONLY valid JSON, no markdown.`;
+Return JSON: {"weaknesses":[{"repo":"name","issues":[{"severity":"high|medium|low","message":"specific issue from actual code"}],"score":0-100}],"strengths":[{"repo":"name","message":"specific strength from actual code","category":"cat"}]}
+
+Return ONLY valid JSON, no markdown.`;
 }
 
 export function buildPracticePrompt(
@@ -112,14 +184,11 @@ export function buildPracticePrompt(
 ): string {
   return `You are a technical interviewer grading a candidate's answer.
 
-## Question
-${question}
+Question: ${question}
 
-## Candidate's Answer
-${userAnswer}
+Candidate's Answer: ${userAnswer}
 
-## Difficulty Level
-${difficulty}
+Difficulty Level: ${difficulty}
 
 Grade the answer and provide:
 1. A score from 0-100
@@ -127,13 +196,7 @@ Grade the answer and provide:
 3. What was missing
 4. An improved model answer
 
-Return JSON:
-{
-  "score": number,
-  "feedback": "what was good",
-  "missing": "what was missing",
-  "improvedAnswer": "better answer"
-}
+Return JSON: {"score": number, "feedback": "what was good", "missing": "what was missing", "improvedAnswer": "better answer"}
 
 Return ONLY valid JSON, no markdown.`;
 }

@@ -1,34 +1,7 @@
 import { NextRequest } from "next/server";
-import { chatCompletion } from "@/lib/ai";
-import { buildChatSystemPrompt } from "@/lib/prompts";
+import { chatCompletion, stripMarkdown } from "@/lib/ai";
+import { buildChatSystemPrompt, buildMockInterviewPrompt } from "@/lib/prompts";
 import type { GitHubProfile, EnrichedRepo, ChatMessage } from "@/lib/types";
-
-function stripReasoning(text: string): string {
-  let cleaned = text;
-
-  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, "");
-  cleaned = cleaned.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, "");
-
-  const lines = cleaned.split("\n");
-  const result: string[] = [];
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (
-      trimmed.startsWith("Here's a thinking process") ||
-      trimmed.startsWith("Here's my thinking") ||
-      trimmed.startsWith("Let me think") ||
-      trimmed.startsWith("**Step") ||
-      trimmed.match(/^\d+\.\s+\*\*Analyze/) ||
-      trimmed.match(/^\d+\.\s+\*\*Identify/) ||
-      trimmed.match(/^\d+\.\s+\*\*Determine/) ||
-      trimmed.match(/^\d+\.\s+\*\*Draft/)
-    ) {
-      continue;
-    }
-    result.push(line);
-  }
-  return result.join("\n").trim();
-}
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -44,31 +17,37 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const systemPrompt = buildChatSystemPrompt(profile, repos);
+    const baseSystemPrompt = mode === "mock"
+      ? buildMockInterviewPrompt(profile, repos, "mid")
+      : buildChatSystemPrompt(profile, repos);
 
-    const apiMessages = [
-      { role: "system" as const, content: systemPrompt },
-      ...messages.map(
-        (m) => ({ role: m.role as "user" | "assistant", content: m.content })
-      ),
+    const apiMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: baseSystemPrompt },
     ];
 
     if (mode === "practice") {
-      apiMessages.splice(1, 0, {
-        role: "system" as const,
+      apiMessages.push({
+        role: "system",
         content:
-          "This is a practice session. The user will answer your questions. Grade their answers, give feedback, and move to the next topic. Be encouraging but honest about weaknesses. Do not show your thinking process — just give the final answer.",
+          "This is a practice session. The user will answer your questions. Grade their answers, give feedback, and move to the next topic. Be encouraging but honest about weaknesses.",
       });
     } else if (mode === "mock") {
-      apiMessages.splice(1, 0, {
-        role: "system" as const,
+      apiMessages.push({
+        role: "system",
         content:
-          "This is a timed mock interview. Ask one question at a time. Be professional and structured like a real FAANG interview. After each answer, give brief feedback and move to the next question. After 10 questions, provide a final score. Do not show your thinking process — just give the final answer.",
+          "You are conducting a timed mock interview. Ask ONE question at a time. After each answer, give brief feedback then ask the next question. Count questions. After 10 questions, provide a final score and summary.",
+      });
+    }
+
+    for (const m of messages) {
+      apiMessages.push({
+        role: m.role as "user" | "assistant",
+        content: m.content,
       });
     }
 
     const raw = await chatCompletion(apiMessages, 8192, 0.7);
-    const response = stripReasoning(raw);
+    const response = stripMarkdown(raw);
 
     return Response.json({ response: response || "I apologize, please try again." });
   } catch (error) {
